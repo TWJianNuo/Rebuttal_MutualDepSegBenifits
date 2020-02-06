@@ -1,0 +1,122 @@
+\documentclass[10pt,twocolumn,letterpaper]{article}
+
+\usepackage{cvpr}
+\usepackage{times}
+\usepackage{epsfig}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+% Include other packages here, before hyperref.
+
+% If you comment hyperref and then uncomment it, you should delete
+% egpaper.aux before re-running latex.  (Or just hit 'q' on the first latex
+% run, let it finish, and you should be clear).
+\usepackage[pagebackref=true,breaklinks=true,letterpaper=true,colorlinks,bookmarks=false]{hyperref}
+%%%%%%%%% PAPER ID  - PLEASE UPDATE
+\def\cvprPaperID{7466} % *** Enter the CVPR Paper ID here
+\def\httilde{\mbox{\tt\raisebox{-.5ex}{\symbol{126}}}}
+
+\begin{document}
+
+%%%%%%%%% TITLE - PLEASE UPDATE
+\title{The Edge of Depth: Explicit Constraints between Segmentation and Depth}  % **** Enter the paper title here
+
+\maketitle
+\thispagestyle{empty}
+
+
+%%%%%%%%% BODY TEXT - ENTER YOUR RESPONSE BELOW
+\noindent We sincerely thank all reviewers for comments.
+All reviewers agree on the level of novelty, thoroughness of experiments, and presentation.
+We address concerns as follows:
+\vspace{-3.5mm}
+\section*{Reviewer 1}
+\vspace{-1.5mm}
+\noindent\textbf{Bleeding artifacts:} 
+We reason occlusion across stereo images is causes bleeding artifacts. As stereo occlusion only happens horizontally, theoretically it can be entirely handled by left-right mask. 
+Bleeding artifacts in the vertical direction have different sources as the horizontal artifacts and can be detected as common mismatch between segmentation and depth border, via proposed $l_g$ loss. 
+One example is the first subfigure of Fig. $4$ (\textit{Suppl.}), where the cyclist's fading head is recovered after imposing $l_g$. 
+We emphasize  although occlusion mask $\mathbf{M}$ is computed horizontally, it can cover the top or bottom of an object, see Fig $4$c (\textit{Paper}).\\
+\noindent\textbf{Weight normalization:} 
+We do not normalize $h(\cdot)$ since it controls effective range of a single semantic-edge pair, independent of the number of pairs. 
+In contrast, $w(\cdot)$ controls mutual influence across multiple pairs. 
+E.g., when only one pair exists, if both terms are normalized, each pixel of the image will be affected by the same shifted difference, which is unreasonable. 
+We will emphasize this in revision. 
+\\
+\noindent\textbf{Additional ResNet18 entry:} 
+As suggested, we will add a ResNet18 entry in Tab. $2$ and Fig. $5$. for fair comparison. \\
+\noindent\textbf{Code Release:} We will release code and pretrained models.\\
+%We look forward to releasing our training/testing code to enable related research and future work. \\
+\noindent\textbf{Reference to supplementary:} 
+We agree and will do that.
+
+\vspace{-3.5mm}
+\section*{Reviewer 2}
+\vspace{-1.5mm}
+\noindent\textbf{$l_g$ within occluded region:}
+Loss in Eqn.~$13$ is correct, no supervision signal is imposed in occluded regions. 
+While using $l_g$, we need to face multiple noise sources, including noise from depth border, semantics border and morphing process itself. %(the two borders not necessarily overlap). 
+To overcome it, we need $l_g$ and photometric loss $l_r$ serve as constraints to \textit{each other}, imposing $l_g$ only on unoccluded area. 
+We notice when $l_r$ fails to provide enough constrains, noise inherited inside $l_g$ will lead to artifacts as in Fig.~$8$d (\textit{Paper}).
+The low-textureness and frequent occlusion make image area around two sides of foreground objects fail to provide strong constrain. 
+If we impose $l_g$ around occluded area, the artifacts in Fig.~$8$d will be even worse. 
+However, this strategy will not discount the functionality of $l_g$ as occluded left border in left stereo image can still get supervision from right stereo image's unoccluded left border (same for the right side). 
+In conclusion, this strategy trades $50$\% similar training material for higher-quality supervision signal, which is acceptable for a self-supervised framework. % and circumvent dilemma pointed out.
+% To resolve that, we adopt $l_p$ to stabilize training, as shown in column (e).
+
+\noindent\textbf{Baseline selection:} 
+We agree on comparing experiments against $\text{Baseline} + {l_p}$ is more fair in Fig. $5$, $6$, $7$, $9$. 
+As suggested, these figures will be updated. 
+However, we select $[11]$ as baseline to ablate the effects of $l_p$ for stabilizing training of $l_g$. 
+As unsupervised depth estimation typically forms joint loss with other imperfect modalities, robustness to noise is becoming increasing important. %, whereas [38] does not discuss this specific benefit. 
+We find ${l_p}$ is an effective method to remedy weak photometric supervision signals near object boundaries since they introduce additional supervision from high quality SGM predictions. 
+We demonstrate the effect in Fig. $8$ column (d) \& (e) and supplementary Fig. $4$ right column. 
+We will emphasize the related description in lines $511\text{-}518$ and lines $747\text{-}755$ to make our point more clear. 
+%For Table $5$, it's better conducted on public available model. \\
+
+\noindent\textbf{Small improvements in Table 3:} 
+We emphasize that the models in Tab. $3$ do not go through any training, and instead measure the improvement between an off-the-shelf prediction and its morphed result. 
+It is expected to be small as it stands for single step improvement under a greedy optimization framework. 
+We cannot repeatedly align borders only relying on single morph, as border gradient will be reduced to $\frac{t}{t+1}$ (supplementary Eqn. $3$) after each update, gradually becoming smoothed out. 
+%Small improvement in Tab. $3$ is due to local optimality of greedy optimization, rather than their prediction's quality. 
+This table represents a proof-of-concept to demonstrate that the borders of other more supervised works are imperfect, and could see improvements if $l_g$ is adapted in future extensions. 
+%Under this perspective, we can not say those models possess good borders.
+
+\noindent\textbf{Inferior ${l_p}$ performance:} 
+Hyperparameters such as resolution and learning rate will have an impact on performance, but we do not consider as dominate reasons. 
+We suspect it is more related to poor SGM prediction quality. 
+For instance, [$38$] uses combinations of three block sizes with four disparities resolutions to produce SGM prediction. 
+However, since $[38]$ did not publish such hyperparameters, it is time-consuming to search for this optimal combination. 
+Further, only the last entry in Table $4$, entitled ``Finetune", goes through ``$3$ epoch fine-tuning". 
+Although [$38$] does not use this strategy, we expect it may be generically beneficial for $l_p$ as well if further ablated. 
+
+\noindent\textbf{Additional benefits if include more modalities:} 
+It is an excellent suggestion for future work, currently beyond the current scope of our paper. 
+%We also notice performance can be further improved, as stated in line $645$ - $675$, however within the scope of our paper, we wish to be more focused on our topic, "border consistence". 
+We intend to publish our code to benefit other research to explore along those directions.
+
+\noindent\textbf{Computation of $\text{Var}(\mathbf{I})$: } 
+The $\text{Var}(\mathbf{I})$ is computed within a $3 \times 3$ local window, as an average across RGB channels, which will be added in implementation details (Sec.~$3.3.2$).
+
+\vspace{-2.5mm}
+\section*{Reviewer 3}
+\vspace{-1.5mm}
+\noindent \textbf{Performance gain:} 
+Although the improvement is not dramatic, if we measure the performance improvement trends in prior unsupervised methods, our relative performance gain is very similar.
+For instance, in line $590$, we emphasize that our method reduces the gap between SOTA supervised and unsupervised methods by $60\%$, whereas the improvements in prior works are [$38$] with $64.29\%$, [$11$] with $59.46\%$, [$3$] with $38.64\%$ and [$33$] with $42.86\%$. 
+
+\noindent \textbf{Paper layout and writing:} 
+We will add more overview about our pipelines, including functionality of each loss term, to the beginning of Sec.~$3$. 
+Also, Fig.~$2$ will be improved and its caption will be modified to ensure the algorithm's input and output are directly stated with contrast against supervised methods. 
+
+\noindent \textbf{Confusion in $\mathbf{I_s}$:} 
+Thank you for pointing out the discrepancy. 
+We mistakenly use $\mathbf{I_s}$ to refer to a semantic segmentation map in line $265$ and in Fig. $2$. 
+%Since $\mathbf{I_s}$ is a binary segmentation map (defined in line $294$), we will correct the consistencies in both text and figures for the final version. 
+$\mathbf{I_s}$, defined in line $294$, is computed via binarizing Cityscapes $19$ semantic categories into foreground or background types. Edge of the segmentation is denoted as $\mathbf{T}_s$ in Eqn.~$1$
+%Foreground includes Cityscape object, vehicle, and human categories, listed in line $538$.
+
+\noindent \textbf{Adding illustration in supplementary:} 
+We agree and will follow this suggestion by adding more illustrations of terms $\mathbf{T_s}$, $\mathbf{T_d}$, $\mathbf{\delta}$, $\mathbf{\Gamma}$ in the supplementary material.
+
+\end{document}
