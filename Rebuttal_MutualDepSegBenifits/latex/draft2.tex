@@ -33,9 +33,9 @@ We address concerns as follows:
 \section*{Reviewer 1}
 \vspace{-1.5mm}
 \noindent\textbf{Bleeding artifacts:} 
-We reason occlusion across stereo images is causes bleeding artifacts. As stereo occlusion only happens horizontally, theoretically it can be entirely handled by left-right mask. 
+We reason occlusion across stereo images causes bleeding artifacts. As stereo occlusion only happens horizontally, theoretically it can be entirely handled by left-right mask. 
 Bleeding artifacts in the vertical direction have different sources as the horizontal artifacts and can be detected as common mismatch between segmentation and depth border, via proposed $l_g$ loss. 
-One example is the first subfigure of Fig. $4$ (\textit{Suppl.}), where the cyclist's fading head is recovered after imposing $l_g$. 
+One example is the first subfigure of Fig.~$4$ (\textit{Suppl.}), where the cyclist's fading head is recovered after imposing $l_g$. 
 We emphasize  although occlusion mask $\mathbf{M}$ is computed horizontally, it can cover the top or bottom of an object, see Fig $4$c (\textit{Paper}).\\
 \noindent\textbf{Weight normalization:} 
 We do not normalize $h(\cdot)$ since it controls effective range of a single semantic-edge pair, independent of the number of pairs. 
